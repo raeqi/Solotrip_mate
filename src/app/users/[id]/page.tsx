@@ -1,172 +1,113 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { ArrowUpRight, BadgeCheck, Car, Globe2, Languages, MapPin, MessageCircle, Star } from "lucide-react";
+import { useApp } from "@/components/providers/AppProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, MapPin, Calendar, Star, Globe, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { getDestinationImage, getTravelerImage } from "@/lib/travel-images";
 
-// Mock user data - in real app, fetch based on [id]
-const MOCK_USER = {
-    id: "u2",
-    nickname: "TravelBuddy",
-    mbti: "INTJ",
-    driving_ability: "yes",
-    solo_experience: "expert",
-    budget_sensitivity: "budget",
-    countries_visited: "Thailand, Vietnam, Cambodia, Indonesia",
-    level: "Seasoned Explorer",
-    points: 850,
-    badges: ["Backpacker", "Budget Master"],
-    stats: {
-        countries: 8,
-        trips_created: 3,
-        trips_joined: 12,
-        contributions: 28
-    },
-    recent_trips: [
-        { id: "1", title: "Southeast Asia Backpacking", date: "Sep 2023", role: "Organizer" },
-        { id: "2", title: "Bali Surf Trip", date: "Aug 2023", role: "Participant" }
-    ]
-};
+export default function UserProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const { travelers, trips } = useApp();
+  const traveler = travelers.find((person) => person.id === id);
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${MOCK_USER.nickname}`;
+  if (!traveler) {
+    return <div className="container mx-auto max-w-xl py-20 text-center"><h1 className="font-display text-4xl">Traveler not found</h1><Link href="/explore"><Button className="mt-6">Explore travelers</Button></Link></div>;
+  }
 
-    return (
-        <div className="container mx-auto max-w-6xl py-10 space-y-8">
-            {/* Header with Avatar and Basic Info */}
-            <Card className="bg-gradient-to-r from-primary/10 to-background border-primary/20">
-                <CardContent className="p-8">
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-8">
-                            <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
-                                <AvatarImage src={avatarUrl} />
-                                <AvatarFallback>{MOCK_USER.nickname[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="space-y-2">
-                                <h1 className="text-3xl font-bold">{MOCK_USER.nickname}</h1>
-                                <div className="flex flex-wrap gap-2">
-                                    <Badge className="text-sm px-3 py-1 bg-primary text-primary-foreground">
-                                        <Trophy className="h-4 w-4 mr-1" /> Level: {MOCK_USER.level}
-                                    </Badge>
-                                    <Badge variant="secondary" className="text-sm px-3 py-1">
-                                        <Star className="h-4 w-4 mr-1" /> {MOCK_USER.points} Points
-                                    </Badge>
-                                </div>
-                                <div className="flex gap-2 mt-2">
-                                    {MOCK_USER.badges.map(badge => (
-                                        <Badge key={badge} variant="outline" className="text-xs">
-                                            {badge}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <Button className="gap-2">
-                            <MessageCircle className="h-4 w-4" /> Send Message
-                        </Button>
-                    </div>
+  const theirTrips = trips.filter((trip) => trip.organizer === traveler.nickname || trip.participants.includes(traveler.nickname));
+  const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${traveler.avatarSeed}`;
+  const countries = traveler.countriesVisited.split(",").map((country) => country.trim());
 
-                    {/* Global Ranking */}
-                    <div className="bg-background/50 rounded-lg p-4 border mt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="text-sm text-muted-foreground mb-1">Global Ranking</div>
-                                <div className="text-2xl font-bold text-primary">#128</div>
-                                <p className="text-xs text-muted-foreground">Top 15% of travelers</p>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-                        <Globe className="h-8 w-8 text-blue-500" />
-                        <div className="text-2xl font-bold">{MOCK_USER.stats.countries}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Countries</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-                        <MapPin className="h-8 w-8 text-green-500" />
-                        <div className="text-2xl font-bold">{MOCK_USER.stats.trips_created}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Trips Created</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-                        <Calendar className="h-8 w-8 text-purple-500" />
-                        <div className="text-2xl font-bold">{MOCK_USER.stats.trips_joined}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Trips Joined</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-                        <Star className="h-8 w-8 text-yellow-500" />
-                        <div className="text-2xl font-bold">{MOCK_USER.stats.contributions}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Contributions</div>
-                    </CardContent>
-                </Card>
+  return (
+    <div className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 sm:py-10">
+      <section className="editorial-card overflow-hidden">
+        <div className="grid min-h-[520px] lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="relative min-h-[340px] overflow-hidden lg:min-h-full">
+            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-[1.02]" style={{ backgroundImage: `url(${getTravelerImage(traveler.id)})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" />
+            <div className="absolute bottom-6 left-6 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-slate-800 shadow-lg backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />Open to meeting on the road
             </div>
+          </div>
 
-            {/* Traveler Profile (Read-only) */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Traveler Profile</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                        Public travel preferences and experience
-                    </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <div className="text-sm font-medium text-muted-foreground">MBTI Type</div>
-                            <div className="text-lg">{MOCK_USER.mbti}</div>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="text-sm font-medium text-muted-foreground">Driving Ability</div>
-                            <div className="text-lg">{MOCK_USER.driving_ability === "yes" ? "✓ Can drive" : "Cannot drive"}</div>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="text-sm font-medium text-muted-foreground">Solo Travel Experience</div>
-                            <div className="text-lg capitalize">{MOCK_USER.solo_experience}</div>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="text-sm font-medium text-muted-foreground">Budget Preference</div>
-                            <div className="text-lg capitalize">{MOCK_USER.budget_sensitivity}</div>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="text-sm font-medium text-muted-foreground">Countries Visited</div>
-                        <div className="text-lg">{MOCK_USER.countries_visited}</div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Recent Trips */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent Trips</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {MOCK_USER.recent_trips.map(trip => (
-                        <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div>
-                                <div className="font-medium">{trip.title}</div>
-                                <div className="text-sm text-muted-foreground">{trip.date}</div>
-                            </div>
-                            <Badge variant={trip.role === 'Organizer' ? 'default' : 'secondary'}>
-                                {trip.role}
-                            </Badge>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
+          <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
+            <div>
+              <div className="flex items-start justify-between gap-4">
+                <Avatar className="h-20 w-20 border-4 border-white bg-[#e9f5f2] shadow-md">
+                  <AvatarImage src={avatar} /><AvatarFallback>{traveler.nickname[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-900">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />{traveler.rating}
+                </div>
+              </div>
+              <p className="eyebrow mt-8">Traveler profile</p>
+              <div className="mt-2 flex items-center gap-2">
+                <h1 className="font-display text-5xl leading-none sm:text-6xl">{traveler.nickname}</h1>
+                {traveler.verified && <BadgeCheck className="h-6 w-6 shrink-0 text-teal-600" />}
+              </div>
+              <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="h-4 w-4" />Based in {traveler.homeBase}</p>
+              <p className="mt-8 max-w-xl text-lg leading-8 text-slate-700">{traveler.bio}</p>
+              <div className="mt-7 flex flex-wrap gap-2">
+                {traveler.interests.map((interest) => <Badge key={interest} variant="secondary" className="rounded-full border-0 px-3.5 py-1.5 font-medium">{interest}</Badge>)}
+              </div>
+            </div>
+            <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-border/70 pt-7">
+              <Button size="lg"><MessageCircle className="mr-2 h-4 w-4" />Say hello</Button>
+              <span className="text-sm text-muted-foreground">Usually replies within a day</span>
+            </div>
+          </div>
         </div>
-    );
+      </section>
+
+      <section className="grid gap-10 py-14 lg:grid-cols-[1fr_360px]">
+        <div>
+          <p className="eyebrow">Journeys</p>
+          <div className="mt-2 flex items-end justify-between gap-4">
+            <h2 className="font-display text-4xl sm:text-5xl">Trips our paths may cross</h2>
+            <span className="hidden text-sm text-muted-foreground sm:block">{theirTrips.length} upcoming</span>
+          </div>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            {theirTrips.map((trip) => (
+              <Link key={trip.id} href={`/trips/${trip.id}`} className="group overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_36px_rgba(15,61,67,0.08)] ring-1 ring-border/60">
+                <div className="relative h-52 overflow-hidden">
+                  <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${getDestinationImage(trip.destination)})` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 to-transparent" />
+                  <Badge className="absolute left-4 top-4 bg-white/90 text-slate-800 hover:bg-white">{trip.status}</Badge>
+                  <p className="absolute bottom-4 left-4 text-sm font-semibold text-white"><MapPin className="mr-1 inline h-4 w-4" />{trip.destination}</p>
+                </div>
+                <div className="flex items-start justify-between gap-3 p-5">
+                  <div><h3 className="text-lg font-bold leading-snug">{trip.title}</h3><p className="mt-2 text-sm text-muted-foreground">{trip.startDate} · {trip.itinerary.length} days</p></div>
+                  <ArrowUpRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </div>
+              </Link>
+            ))}
+            {theirTrips.length === 0 && <div className="rounded-3xl border border-dashed p-10 text-muted-foreground">No public journeys yet.</div>}
+          </div>
+        </div>
+
+        <aside className="lg:border-l lg:pl-10">
+          <p className="eyebrow">Travel at a glance</p>
+          <div className="mt-6 grid grid-cols-3 gap-2 border-b pb-8">
+            <div><strong className="font-display block text-4xl">{traveler.tripsCompleted}</strong><span className="text-xs text-muted-foreground">trips</span></div>
+            <div><strong className="font-display block text-4xl">{countries.length}</strong><span className="text-xs text-muted-foreground">countries</span></div>
+            <div><strong className="font-display block text-4xl">{traveler.points.toLocaleString()}</strong><span className="text-xs text-muted-foreground">points</span></div>
+          </div>
+          <dl className="space-y-6 py-8 text-sm">
+            <div className="flex gap-4"><Globe2 className="mt-0.5 h-5 w-5 text-teal-700" /><div><dt className="font-semibold">Travel style</dt><dd className="mt-1 capitalize text-muted-foreground">{traveler.soloExperience} · {traveler.budgetSensitivity} budget</dd></div></div>
+            <div className="flex gap-4"><Languages className="mt-0.5 h-5 w-5 text-teal-700" /><div><dt className="font-semibold">Languages</dt><dd className="mt-1 text-muted-foreground">{traveler.languages.join(" · ")}</dd></div></div>
+            <div className="flex gap-4"><Car className="mt-0.5 h-5 w-5 text-teal-700" /><div><dt className="font-semibold">On the road</dt><dd className="mt-1 capitalize text-muted-foreground">{traveler.drivingAbility === "yes" ? "Comfortable driving" : traveler.drivingAbility}</dd></div></div>
+          </dl>
+          <div className="rounded-2xl bg-[#eaf4f1] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-teal-800">Travel signature</p>
+            <p className="mt-3 text-sm leading-6 text-slate-700">{countries.slice(0, 4).join(" · ")}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Personality {traveler.mbti}</p>
+          </div>
+        </aside>
+      </section>
+    </div>
+  );
 }

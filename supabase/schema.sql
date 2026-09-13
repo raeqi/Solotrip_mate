@@ -101,12 +101,101 @@ create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
 
+create policy "Users can create own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id);
+
 create policy "Trips are viewable by everyone"
   on public.trips for select
   using (true);
 
+create policy "Users can create own trips"
   on public.trips for insert
   with check (auth.uid() = organizer_id);
+
+create policy "Organizers can update own trips"
+  on public.trips for update
+  using (auth.uid() = organizer_id);
+
+create policy "Participants are viewable by everyone"
+  on public.trip_participants for select
+  using (true);
+
+create policy "Users can request to join trips"
+  on public.trip_participants for insert
+  with check (auth.uid() = user_id);
+
+create policy "Itineraries are viewable by everyone"
+  on public.itinerary_items for select
+  using (true);
+
+create policy "Trip organizers can manage itinerary items"
+  on public.itinerary_items for all
+  using (exists (
+    select 1 from public.trips
+    where trips.id = itinerary_items.trip_id
+      and trips.organizer_id = auth.uid()
+  ))
+  with check (exists (
+    select 1 from public.trips
+    where trips.id = itinerary_items.trip_id
+      and trips.organizer_id = auth.uid()
+  ));
+
+create policy "Invites are viewable by everyone"
+  on public.invites for select
+  using (true);
+
+create policy "Users can create own invites"
+  on public.invites for insert
+  with check (auth.uid() = creator_id);
+
+create policy "Trip members can view expenses"
+  on public.expenses for select
+  using (
+    auth.uid() = payer_id or exists (
+      select 1 from public.trip_participants
+      where trip_participants.trip_id = expenses.trip_id
+        and trip_participants.user_id = auth.uid()
+        and trip_participants.status = 'accepted'
+    )
+  );
+
+create policy "Trip members can add expenses"
+  on public.expenses for insert
+  with check (auth.uid() = payer_id);
+
+create policy "Trip members can view messages"
+  on public.messages for select
+  using (
+    exists (
+      select 1 from public.trips
+      where trips.id = messages.trip_id
+        and trips.organizer_id = auth.uid()
+    ) or exists (
+      select 1 from public.trip_participants
+      where trip_participants.trip_id = messages.trip_id
+        and trip_participants.user_id = auth.uid()
+        and trip_participants.status = 'accepted'
+    )
+  );
+
+create policy "Trip members can send messages"
+  on public.messages for insert
+  with check (
+    auth.uid() = sender_id and (
+      exists (
+        select 1 from public.trips
+        where trips.id = messages.trip_id
+          and trips.organizer_id = auth.uid()
+      ) or exists (
+        select 1 from public.trip_participants
+        where trip_participants.trip_id = messages.trip_id
+          and trip_participants.user_id = auth.uid()
+          and trip_participants.status = 'accepted'
+      )
+    )
+  );
 
 -- POI Ratings
 create table public.poi_ratings (
@@ -142,4 +231,3 @@ left join public.trips t on t.organizer_id = p.id
 left join public.trip_participants tp on tp.user_id = p.id
 left join public.poi_ratings pr on pr.user_id = p.id
 group by p.id;
-

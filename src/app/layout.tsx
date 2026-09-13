@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
 
 export const metadata: Metadata = {
   title: "Solotrip Mate",
@@ -15,6 +8,7 @@ export const metadata: Metadata = {
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AppProvider } from "@/components/providers/AppProvider";
 
 // ... imports
 
@@ -25,15 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased flex flex-col",
-          outfit.variable
-        )}
-      >
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <body className="min-h-screen bg-background font-sans antialiased flex flex-col">
+        <AppProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AppProvider>
       </body>
     </html>
   );

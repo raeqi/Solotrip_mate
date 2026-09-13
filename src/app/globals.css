@@ -5,26 +5,26 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  --background: 42 45% 97%;
+  --foreground: 196 41% 14%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 196 41% 14%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
+  --popover-foreground: 196 41% 14%;
+  --primary: 174 72% 28%;
   --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --secondary: 39 57% 91%;
+  --secondary-foreground: 196 41% 14%;
+  --muted: 40 27% 93%;
+  --muted-foreground: 195 14% 41%;
+  --accent: 184 36% 89%;
+  --accent-foreground: 190 58% 20%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
-  --radius: 0.75rem;
+  --border: 39 24% 85%;
+  --input: 39 24% 85%;
+  --ring: 174 72% 28%;
+  --radius: 1rem;
 }
 
 .dark {
@@ -74,9 +74,50 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  --font-sans: var(--font-sans);
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
 body {
   @apply bg-background text-foreground;
+  background-image:
+    radial-gradient(circle at 8% 4%, hsl(36 88% 91%) 0, transparent 30rem),
+    radial-gradient(circle at 92% 12%, hsl(187 66% 91%) 0, transparent 32rem),
+    linear-gradient(to bottom, hsl(var(--background)), hsl(45 40% 96%));
+  background-attachment: fixed;
+}
+
+.font-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  letter-spacing: -0.035em;
+}
+
+.eyebrow {
+  color: hsl(var(--primary));
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.editorial-card {
+  background: hsl(0 0% 100% / 0.92);
+  border: 1px solid hsl(39 24% 85% / 0.72);
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 50px hsl(190 38% 16% / 0.07);
+}
+
+::selection {
+  background: hsl(174 55% 69% / 0.48);
+}
+
+.glass-surface {
+  background: hsl(42 55% 99% / 0.84);
+  border: 1px solid hsl(39 24% 84% / 0.8);
+  box-shadow: 0 18px 55px hsl(190 38% 20% / 0.09);
+  backdrop-filter: blur(18px);
+}
+
+.dot-grid {
+  background-image: radial-gradient(hsl(178 24% 50% / 0.24) 1px, transparent 1px);
+  background-size: 20px 20px;
 }

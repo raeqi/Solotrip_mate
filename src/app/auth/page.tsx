@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Github, Mail } from "lucide-react";
+import { Github } from "lucide-react";
 
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
@@ -40,8 +40,8 @@ export default function AuthPage() {
                 },
             });
             if (error) throw error;
-        } catch (error: any) {
-            alert(error.message);
+        } catch (error: unknown) {
+            alert(error instanceof Error ? error.message : "Unable to sign in.");
         }
     };
 
@@ -97,8 +97,8 @@ export default function AuthPage() {
                 if (error) throw error;
                 alert("Check your email for the confirmation link!");
             }
-        } catch (error: any) {
-            alert(error.message);
+        } catch (error: unknown) {
+            alert(error instanceof Error ? error.message : "Unable to complete authentication.");
         } finally {
             setLoading(false);
         }

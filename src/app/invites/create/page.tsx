@@ -1,107 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Clock, MapPin, Utensils, Camera } from "lucide-react";
+import type { Invite } from "@/lib/types";
 
 export default function CreateInvitePage() {
-    const [type, setType] = useState("meal");
-
-    return (
-        <div className="container mx-auto max-w-md py-10">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Create Quick Invite</CardTitle>
-                    <CardDescription>
-                        Find someone to join you for a meal or activity right now.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <Button
-                            variant={type === "meal" ? "default" : "outline"}
-                            className="h-20 flex flex-col gap-2"
-                            onClick={() => setType("meal")}
-                        >
-                            <Utensils className="h-6 w-6" />
-                            <span>Meal</span>
-                        </Button>
-                        <Button
-                            variant={type === "activity" ? "default" : "outline"}
-                            className="h-20 flex flex-col gap-2"
-                            onClick={() => setType("activity")}
-                        >
-                            <Camera className="h-6 w-6" />
-                            <span>Activity</span>
-                        </Button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>What are you planning?</Label>
-                            <Input placeholder={type === "meal" ? "e.g. Sushi at Tsukiji" : "e.g. Visit Senso-ji"} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>When?</Label>
-                            <Select defaultValue="now">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select time" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="now">Right Now</SelectItem>
-                                    <SelectItem value="30min">In 30 mins</SelectItem>
-                                    <SelectItem value="1hour">In 1 hour</SelectItem>
-                                    <SelectItem value="custom">Custom Time</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Where?</Label>
-                            <div className="relative">
-                                <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-8" placeholder="Current Location or Search" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Valid Until</Label>
-                            <Select defaultValue="1hour">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Duration" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="30min">30 mins</SelectItem>
-                                    <SelectItem value="1hour">1 hour</SelectItem>
-                                    <SelectItem value="2hours">2 hours</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-muted-foreground">Invite will expire automatically after this time.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Note</Label>
-                            <Textarea placeholder="Any specific preferences? (e.g. Dutch treat, No smoking)" />
-                        </div>
-
-                        <Button className="w-full" size="lg">
-                            Post Invite
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
+  const { createInvite } = useApp(); const router = useRouter();
+  const [type, setType] = useState<Invite["type"]>("meal"); const [title, setTitle] = useState(""); const [location, setLocation] = useState(""); const [scheduledTime, setScheduledTime] = useState(""); const [note, setNote] = useState(""); const [error, setError] = useState("");
+  const submit = (event: React.FormEvent) => { event.preventDefault(); if (!title.trim() || !location.trim() || !scheduledTime) { setError("Complete the title, location, and time."); return; } createInvite({ type, title: title.trim(), location: location.trim(), scheduledTime, note: note.trim() }); router.push("/dashboard"); };
+  return <div className="container mx-auto max-w-xl px-4 py-10"><Card><CardHeader><CardTitle>Create a nearby invite</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={submit}><div className="grid grid-cols-2 gap-3"><Button type="button" variant={type === "meal" ? "default" : "outline"} onClick={() => setType("meal")}>Meal</Button><Button type="button" variant={type === "activity" ? "default" : "outline"} onClick={() => setType("activity")}>Activity</Button></div><div className="space-y-2"><Label htmlFor="invite-title">Title</Label><Input id="invite-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Dinner at a local izakaya" /></div><div className="space-y-2"><Label htmlFor="invite-location">Meeting place</Label><Input id="invite-location" value={location} onChange={(event) => setLocation(event.target.value)} /></div><div className="space-y-2"><Label htmlFor="invite-time">Time</Label><Input id="invite-time" type="datetime-local" value={scheduledTime} onChange={(event) => setScheduledTime(event.target.value)} /></div><div className="space-y-2"><Label htmlFor="invite-note">Note</Label><Textarea id="invite-note" value={note} onChange={(event) => setNote(event.target.value)} /></div>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button className="w-full" type="submit">Post invite</Button></form></CardContent></Card></div>;
 }
