@@ -18,7 +18,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-[1240px] px-4 py-10 sm:px-6">
       <header className="flex flex-col justify-between gap-6 border-b pb-9 sm:flex-row sm:items-end">
         <div className="flex items-center gap-5"><Avatar className="h-16 w-16 border-4 border-white bg-white shadow-md"><AvatarImage src={avatar} /><AvatarFallback>{profile.nickname[0]}</AvatarFallback></Avatar><div><p className="eyebrow">Your travel space</p><h1 className="font-display mt-1 text-5xl">Welcome back, {profile.nickname}</h1><p className="mt-2 text-sm capitalize text-muted-foreground">{profile.soloExperience} traveler · {profile.budgetSensitivity} budget</p></div></div>
-        <div className="flex gap-2"><Link href="/profile"><Button variant="outline">Edit profile</Button></Link><Button variant="ghost" onClick={resetDemo}><RotateCcw className="mr-2 h-4 w-4" />Reset demo</Button></div>
+        <div className="flex gap-2"><Link href="/invites"><Button variant="outline">My invites</Button></Link><Link href="/profile"><Button variant="outline">Edit profile</Button></Link><Button variant="ghost" onClick={resetDemo}><RotateCcw className="mr-2 h-4 w-4" />Reset demo</Button></div>
       </header>
 
       <section className="grid grid-cols-3 divide-x border-b py-9">
