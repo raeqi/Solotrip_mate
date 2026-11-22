@@ -8,6 +8,7 @@ import { useApp } from "@/components/providers/AppProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { formatInviteTime } from "@/lib/invite-time.mjs";
 import { getDestinationImage, getTravelerImage } from "@/lib/travel-images";
 
 const Map = dynamic(() => import("@/components/map/Map"), { ssr: false, loading: () => <div className="flex h-full items-center justify-center bg-[#e8efeb] text-sm text-muted-foreground">Loading the world…</div> });
@@ -18,9 +19,11 @@ export default function ExplorePage() {
   const [view, setView] = useState<"trips" | "invites" | "travelers">("trips");
   const normalized = query.trim().toLowerCase();
   const publicTrips = trips.filter((trip) => trip.status === "recruiting" && (!normalized || `${trip.title} ${trip.destination}`.toLowerCase().includes(normalized)));
-  const publicInvites = invites.filter((invite) => !normalized || `${invite.title} ${invite.location}`.toLowerCase().includes(normalized));
+  const publicInvites = invites.filter(invite => invite.status !== "cancelled" && (!normalized || (invite.title+" "+invite.location).toLowerCase().includes(normalized)));
   const people = travelers.filter((traveler) => !normalized || `${traveler.nickname} ${traveler.homeBase} ${traveler.interests.join(" ")}`.toLowerCase().includes(normalized));
-  const markers = (view === "trips" ? publicTrips : view === "invites" ? publicInvites : []).map((item) => ({ id: item.id, position: item.coordinates ?? [35.6812, 139.7671], title: item.title, description: "destination" in item ? item.destination : item.location, isSoloFriendly: false }));
+  const listed = view === "trips" ? publicTrips : view === "invites" ? publicInvites : [];
+  const markers = listed.flatMap(item => item.coordinates ? [{id:item.id,position:item.coordinates,title:item.title,description:"destination" in item?item.destination:item.location,isSoloFriendly:false}] : []);
+  const unlocatedCount = listed.length - markers.length;
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6">
@@ -85,11 +88,11 @@ export default function ExplorePage() {
           {view === "invites" && publicInvites.map((invite) => (
             <article key={invite.id} className="group overflow-hidden rounded-[1.5rem] bg-white p-6 shadow-[0_10px_32px_rgba(15,61,67,0.065)] ring-1 ring-border/60">
               <div className="flex items-start justify-between gap-4"><Badge variant="secondary" className="rounded-full capitalize">{invite.type}</Badge><ArrowUpRight className="h-5 w-5 text-muted-foreground" /></div>
-              <h2 className="mt-5 text-2xl font-bold">{invite.title}</h2>
+              <Link href={"/invites/"+invite.id}><h2 className="mt-5 text-2xl font-bold underline decoration-teal-200 underline-offset-4">{invite.title}</h2></Link>
               <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="h-4 w-4 text-teal-700" />{invite.location}</p>
-              <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="h-4 w-4 text-teal-700" />{new Date(invite.scheduledTime).toLocaleString()}</p>
+              <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="h-4 w-4 text-teal-700" />{formatInviteTime(invite)}</p>
               <p className="mt-5 border-t pt-5 text-sm leading-6 text-slate-700">{invite.note}</p>
-              <p className="mt-4 text-xs text-muted-foreground">Hosted by <strong className="text-foreground">{invite.creator}</strong></p>
+              <p className="mt-4 text-xs text-muted-foreground">Hosted by <strong className="text-foreground">{invite.creator}</strong></p><p className="mt-3 text-xs text-muted-foreground">{invite.coordinates ? "Confirmed activity position" : "Not located · list only"}</p><Link className="mt-4 inline-block text-sm font-semibold underline" href={"/invites/"+invite.id}>View invite and participation</Link>
             </article>
           ))}
 
@@ -103,8 +106,8 @@ export default function ExplorePage() {
         </div>
 
         <aside className="sticky top-24 hidden overflow-hidden rounded-[1.75rem] bg-white p-2 shadow-[0_20px_60px_rgba(15,61,67,0.12)] ring-1 ring-border/60 lg:block">
-          <div className="absolute left-6 top-6 z-[500] rounded-full bg-white/90 px-4 py-2 text-xs font-semibold shadow-md backdrop-blur">{markers.length} places to explore</div>
-          <Map center={[20, 0]} zoom={2} markers={markers} className="h-[700px] w-full rounded-[1.35rem]" />
+          <div className="absolute left-6 top-6 z-[500] rounded-full bg-white/90 px-4 py-2 text-xs font-semibold shadow-md backdrop-blur">{markers.length} confirmed map positions · {unlocatedCount} not located</div>
+          {markers.length ? <Map center={[20, 0]} zoom={2} markers={markers} className="h-[700px] w-full rounded-[1.35rem]" /> : <div className="flex h-[420px] items-center justify-center p-8 text-center text-sm text-muted-foreground">No confirmed map positions. Unlocated activities remain in the list.</div>}
         </aside>
       </div>
     </div>

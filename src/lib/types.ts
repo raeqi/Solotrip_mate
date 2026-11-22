@@ -70,12 +70,27 @@ export interface Expense {
   date: string;
 }
 
+export interface InviteApplication {
+  id: string;
+  applicantId: string;
+  applicantName: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+}
+
 export interface Invite {
   id: string;
   type: "meal" | "activity";
   title: string;
   location: string;
-  scheduledTime: string;
+  scheduledTime: string; // Legacy raw wall time, or normalized UTC in shared mode; display startsAt + timeZone.
+  startsAt?: string;
+  timeZone?: string;
+  capacity?: number; // Companion places, excluding the host.
+  status?: "open" | "cancelled";
+  applications?: InviteApplication[];
+  acceptedCount?: number;
+  creatorId?: string;
   note: string;
   creator: string;
   coordinates?: [number, number];

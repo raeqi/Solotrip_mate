@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2, MapPin } from "lucide-react";
 import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/button";
@@ -9,21 +9,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { DayPlan, ItineraryItem, TripStatus } from "@/lib/types";
+import type { DayPlan, ItineraryItem, TripStatus, Trip } from "@/lib/types";
 
 const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
 export default function CreateTripPage() {
+  return <Suspense fallback={<p className="p-8">Loading plan…</p>}><TripFormSelector /></Suspense>;
+}
+function TripFormSelector() {
+  const params=useSearchParams();
+  const {ready,trips,profile}=useApp();
+  if(!ready)return <p className="p-8">Loading private plans…</p>;
+  const id=params.get("edit");
+  const existing=id?trips.find(t=>t.id===id&&t.organizer===profile.nickname):undefined;
+  if(id&&!existing)return <p className="p-8">This private plan is not available in this browser.</p>;
+  return <TripForm key={existing?.id || "new"} existing={existing}/>;
+}
+function TripForm({existing}:{existing?:Trip}) {
   const router = useRouter();
-  const { createTrip } = useApp();
-  const [title, setTitle] = useState("");
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState(4);
+  const { createTrip, updateTrip } = useApp();
+  const [title, setTitle] = useState(existing?.title || "");
+  const [destination, setDestination] = useState(existing?.destination || "");
+  const [startDate, setStartDate] = useState(existing?.startDate || "");
+  const [endDate, setEndDate] = useState(existing?.endDate || "");
+  const [description, setDescription] = useState(existing?.description || "");
+  const [maxParticipants, setMaxParticipants] = useState(existing?.maxParticipants || 1);
   const [error, setError] = useState("");
-  const [days, setDays] = useState<DayPlan[]>([{ id: "day-1", date: "", items: [] }]);
+  const [days, setDays] = useState<DayPlan[]>(existing?.itinerary || [{ id: "day-1", date: "", items: [] }]);
 
   const addDay = () => setDays((current) => [...current, { id: newId("day"), date: "", items: [] }]);
   const updateDayDate = (dayId: string, date: string) => setDays((current) => current.map((day) => day.id === dayId ? { ...day, date } : day));
@@ -46,13 +58,17 @@ export default function CreateTripPage() {
       setError("End date must be on or after the start date.");
       return;
     }
-    const id = createTrip({ title: title.trim(), destination: destination.trim(), startDate, endDate, description: description.trim(), maxParticipants, status, itinerary: days });
+    if (!Number.isInteger(maxParticipants) || maxParticipants < 1 || maxParticipants > 12) { setError("Choose 1–12 travelers."); return; }
+    if (days.some(day=>day.date&&(day.date<startDate||day.date>endDate))) {setError("Activity days must be within the trip dates."); return;}
+    const payload = { title: title.trim(), destination: destination.trim(), startDate, endDate, description: description.trim(), maxParticipants, status, itinerary: days };
+    const id=existing?.id || createTrip(payload);
+    if(existing)updateTrip(id,payload);
     router.push(`/trips/${id}`);
   };
 
   return (
     <div className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
-      <div><h1 className="text-3xl font-bold">Plan your trip</h1><p className="text-muted-foreground">Build it for yourself first, then open any activity to companions.</p></div>
+      <div><h1 className="text-3xl font-bold">{existing?"Edit your private plan":"Plan your trip"}</h1><p className="text-muted-foreground">Build it for yourself first, then open any activity to companions.</p></div>
       <Card>
         <CardHeader><CardTitle>Trip details</CardTitle></CardHeader>
         <CardContent className="grid gap-4">
@@ -90,7 +106,7 @@ export default function CreateTripPage() {
         ))}
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <div className="flex justify-end gap-3"><Button variant="outline" onClick={() => save("draft")}>Save draft</Button><Button onClick={() => save("recruiting")}>Publish trip</Button></div>
+      <p className="text-sm text-muted-foreground">Plans stay in this browser. Invite company from one saved activity; the rest of your itinerary stays private.</p><div className="flex justify-end gap-3"><Button variant="outline" onClick={() => save("draft")}>Save draft</Button><Button onClick={() => save("recruiting")}>Save open demo plan</Button></div>
     </div>
   );
 }
